@@ -114,6 +114,8 @@ SimpleWindow.prototype = {
     // 绑定拖动功能
     _drag : function(ele, handler) {
 
+        var _self = this;
+
         // 鼠标起始位置
         var preAxis = {
             x : null,
@@ -170,8 +172,7 @@ SimpleWindow.prototype = {
             resultY = resultY >= positionRange.maxTop ? positionRange.maxTop : resultY;
 
 
-            ele.style.left = resultX + "px";
-            ele.style.top = resultY + "px";
+            _self.moveTo(resultY, resultX)
         }
 
         // 解绑拖动
@@ -198,8 +199,8 @@ new SimpleWindow({
 
     width : 300,
     height : 300,
-    top : 100,
-    left : 150,
+    top : 80,
+    left : 100,
 
     title : "标题",
     content : "内容",
@@ -212,7 +213,7 @@ new SimpleWindow({
 
     width : 200,
     height : 200,
-    top : 200,
+    top : 250,
     left : 250,
 
     title : "标题",
