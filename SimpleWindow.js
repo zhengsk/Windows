@@ -109,7 +109,7 @@ SimpleWindow.prototype = {
     },
 
     // 移动窗口位置
-    moveTo : function(top, left) {
+    moveTo : function(left, top) {
         var winStyle = this.winElement.style;
         winStyle.left = left + "px";
         winStyle.top = top + "px";
@@ -121,7 +121,7 @@ SimpleWindow.prototype = {
         var _self = this;
 
         // 鼠标起始位置
-        var preAxis = {
+        var preMouse = {
             x : null,
             y : null
         }
@@ -146,12 +146,15 @@ SimpleWindow.prototype = {
             
             event = Util.event.getEvent(event);
 
-            preAxis = Util.event.getPageAxis(event);
+            preMouse = Util.event.getPageAxis(event);
 
             prePosition = {
                 top : ele.offsetTop,
                 left : ele.offsetLeft
             }
+
+            positionRange.maxTop = ele.offsetParent.clientHeight - ele.offsetHeight;
+            positionRange.maxLeft = ele.offsetParent.clientWidth - ele.offsetWidth;
 
             Util.event.on(document, 'mousemove', mouseMove);
             Util.event.on(document, 'mouseup', mouseUp);
@@ -161,8 +164,8 @@ SimpleWindow.prototype = {
         function mouseMove(event) {
             var currentAxis = Util.event.getPageAxis(event);
             var changedAxis = {
-                x : currentAxis.x - preAxis.x,
-                y : currentAxis.y - preAxis.y
+                x : currentAxis.x - preMouse.x,
+                y : currentAxis.y - preMouse.y
             }
 
             var resultX = prePosition.left + changedAxis.x;
@@ -176,7 +179,7 @@ SimpleWindow.prototype = {
             resultY = resultY >= positionRange.maxTop ? positionRange.maxTop : resultY;
 
 
-            _self.moveTo(resultY, resultX)
+            _self.moveTo(resultX, resultY)
         }
 
         // 解绑拖动
@@ -199,10 +202,39 @@ SimpleWindow.prototype = {
     _bindResize : function() {
         var _self = this;
         var winElement = this.winElement;
+
+        // 鼠标起始位置
+        var preMouse = {
+            x : null,
+            y : null
+        }
+
+        // 窗口原始位置
+        var prePosition = {
+            left : null,
+            top : null
+        }
+
+        // 窗口原始大小
+        var preSize = {
+            width : null,
+            height : null
+        }
+
+        // 可改变的值
+        var changeParam = {
+            top : false,
+            left : false,
+            width : false,
+            left : false
+        }
+
         Util.event.on(winElement, 'mousemove', setCursor);
 
         // 设置鼠标样式
         function setCursor(event) {
+
+            if(_self.resizing){return false};
 
             _self.resizeAble = true;
 
@@ -218,25 +250,34 @@ SimpleWindow.prototype = {
             var x = event.clientX - clientRect.left + (offsetWdith - _self.winElement.clientWidth)/2, 
                 y = event.clientY - clientRect.top + (offsetHeight - _self.winElement.clientHeight)/2;
 
+            changeParam.width = changeParam.height = changeParam.top = changeParam.left = false;
 
             if(x >= 0 && x <= 10){
                 cursor = "ew-resize";
+                changeParam.width = changeParam.left = true;
                 if(y >= 0 && y <= 10){
                     cursor = "nwse-resize";
+                    changeParam.height = changeParam.top = true;
                 }else if(y >= offsetHeight - 10){
                     cursor = "nesw-resize";
+                    changeParam.height = true;
                 }
             }else if(x >= offsetWdith - 10){
                 cursor = "ew-resize";
+                changeParam.width = true;
                 if(y >= 0 && y <= 10){
                     cursor = "nesw-resize";
+                    changeParam.height = changeParam.top = true;
                 }else if(y >= offsetHeight - 10){
                     cursor = "nwse-resize";
+                    changeParam.height = true;
                 }
             }else if(y >= 0 && y <= 10){
                 cursor = "ns-resize";
+                changeParam.height = changeParam.top = true;
             }else if(y >= offsetHeight - 10){
                 cursor = "ns-resize";
+                changeParam.height = true;
             }else{
                 cursor = "default";
                 _self.resizeAble = false;
@@ -245,30 +286,13 @@ SimpleWindow.prototype = {
             winElement.style.cursor = cursor;
         }
 
-        // 鼠标起始位置
-        var preAxis = {
-            x : null,
-            y : null
-        }
-
-        // 窗口原始位置
-        var prePosition = {
-            top : null,
-            left : null
-        }
-
-        var preSize = {
-            width : null,
-            height : null
-        }
-
         // 绑定缩小放大功能
         Util.event.on(winElement, 'mousedown', resizeMouseDown);
 
         function resizeMouseDown(event) {
             if(_self.resizeAble){
-
-                preAxis = Util.event.getPageAxis(event);
+                _self.resizing = true;
+                preMouse = Util.event.getPageAxis(event);
 
                 preSize = {
                     width : parseInt(_self.winElement.style.width),
@@ -276,8 +300,8 @@ SimpleWindow.prototype = {
                 }
 
                 prePosition = {
-                    top : ele.offsetTop,
-                    left : ele.offsetLeft
+                    top : _self.winElement.offsetTop,
+                    left : _self.winElement.offsetLeft
                 }
 
                 Util.event.on(document, 'mousemove', resizeMouseMove);
@@ -286,21 +310,52 @@ SimpleWindow.prototype = {
         }
 
         function resizeMouseMove(event) {
+            event = Util.event.getEvent(event);
             var currentAxis = Util.event.getPageAxis(event);
             var changedAxis = {
-                x : currentAxis.x - preAxis.x,
-                y : currentAxis.y - preAxis.y
+                x : currentAxis.x - preMouse.x,
+                y : currentAxis.y - preMouse.y
             }
 
-            _self.resizeTo(
-                preSize.width + changedAxis.x, 
-                preSize.height + changedAxis.y
-            );
+            var left = prePosition.left, 
+                top = prePosition.top, 
+                width = preSize.width, 
+                height = preSize.height;
 
+
+            if(changeParam.width){
+                if(changeParam.left){
+                    width = preSize.width - changedAxis.x;
+                }else{
+                    width = preSize.width + changedAxis.x;
+                }
+            }
+
+            if(changeParam.height){
+                if(changeParam.top){
+                    height = preSize.height - changedAxis.y;
+                }else{
+                    height = preSize.height + changedAxis.y;
+                }
+            }
+
+            if(changeParam.left){
+                left = prePosition.left + changedAxis.x;
+            }
+
+            if(changeParam.top){
+                top = prePosition.top + changedAxis.y;
+            }
+
+
+            _self.moveTo(left, top);
+
+            _self.resizeTo(width, height);
         }
 
         function resizeMouseUp(event) {
             if(_self.resizeAble){
+                _self.resizing = false;
                 Util.event.off(document, 'mousemove', resizeMouseMove);
                 Util.event.off(document, 'mouseup', resizeMouseUp);
             }
