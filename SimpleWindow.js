@@ -2,9 +2,10 @@
 var Util = {
     
     event : {
-        on: function(element, type, handler, capture) {
+
+        on: function(element, type, handler) {
             if(element.addEventListener) {
-                element.addEventListener(type, handler, capture);
+                element.addEventListener(type, handler, false);
             } else if (element.attachEvent) {
                 element.attachEvent("on"+type,handler);
             } else {
@@ -12,9 +13,9 @@ var Util = {
             }
         },
 
-        off: function(element, type, handler, capture) {
+        off: function(element, type, handler) {
             if(element.removeEventListener) {
-                element.removeEventListener(type, handler, capture);
+                element.removeEventListener(type, handler, false);
             } else if (element.detachEvent) {
                 element.detachEvent("on"+type,handler);
             } else {
@@ -200,23 +201,23 @@ SimpleWindow.prototype = {
         var winElement = this.winElement;
         Util.event.on(winElement, 'mousemove', setCursor);
 
+        // 设置鼠标样式
         function setCursor(event) {
+
+            _self.resizeAble = true;
 
             event = Util.event.getEvent(event);
 
             var cursor = "default";
 
-            var offsetWdith = _self.winElement.offsetWidth,
-                offsetHeight = _self.winElement.offsetHeight
+            var clientRect = _self.winElement.getBoundingClientRect();
 
-            var winX = _self.winElement.clientX,
-                winY = _self.winElement.clientY
+            var offsetWdith = clientRect.right - clientRect.left,
+                offsetHeight = clientRect.bottom - clientRect.top;
 
+            var x = event.clientX - clientRect.left + (offsetWdith - _self.winElement.clientWidth)/2, 
+                y = event.clientY - clientRect.top + (offsetHeight - _self.winElement.clientHeight)/2;
 
-            var x = event.clientX - winX + (offsetWdith - _self.winElement.clientWidth)/2, 
-                y = event.clientY - winY + (offsetHeight - _self.winElement.clientHeight)/2;
-
-            debugger;
 
             if(x >= 0 && x <= 10){
                 cursor = "ew-resize";
@@ -238,9 +239,71 @@ SimpleWindow.prototype = {
                 cursor = "ns-resize";
             }else{
                 cursor = "default";
+                _self.resizeAble = false;
             }
 
             winElement.style.cursor = cursor;
+        }
+
+        // 鼠标起始位置
+        var preAxis = {
+            x : null,
+            y : null
+        }
+
+        // 窗口原始位置
+        var prePosition = {
+            top : null,
+            left : null
+        }
+
+        var preSize = {
+            width : null,
+            height : null
+        }
+
+        // 绑定缩小放大功能
+        Util.event.on(winElement, 'mousedown', resizeMouseDown);
+
+        function resizeMouseDown(event) {
+            if(_self.resizeAble){
+
+                preAxis = Util.event.getPageAxis(event);
+
+                preSize = {
+                    width : parseInt(_self.winElement.style.width),
+                    height : parseInt(_self.winElement.style.height)
+                }
+
+                prePosition = {
+                    top : ele.offsetTop,
+                    left : ele.offsetLeft
+                }
+
+                Util.event.on(document, 'mousemove', resizeMouseMove);
+                Util.event.on(document, 'mouseup', resizeMouseUp);
+            }
+        }
+
+        function resizeMouseMove(event) {
+            var currentAxis = Util.event.getPageAxis(event);
+            var changedAxis = {
+                x : currentAxis.x - preAxis.x,
+                y : currentAxis.y - preAxis.y
+            }
+
+            _self.resizeTo(
+                preSize.width + changedAxis.x, 
+                preSize.height + changedAxis.y
+            );
+
+        }
+
+        function resizeMouseUp(event) {
+            if(_self.resizeAble){
+                Util.event.off(document, 'mousemove', resizeMouseMove);
+                Util.event.off(document, 'mouseup', resizeMouseUp);
+            }
         }
     }
 
