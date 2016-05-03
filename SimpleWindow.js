@@ -2,9 +2,9 @@
 var Util = {
     
     event : {
-        on: function(element, type, handler) {
+        on: function(element, type, handler, capture) {
             if(element.addEventListener) {
-                element.addEventListener(type,handler,false);
+                element.addEventListener(type, handler, capture);
             } else if (element.attachEvent) {
                 element.attachEvent("on"+type,handler);
             } else {
@@ -12,9 +12,9 @@ var Util = {
             }
         },
 
-        off: function(element, type, handler) {
+        off: function(element, type, handler, capture) {
             if(element.removeEventListener) {
-                element.removeEventListener(type,handler,false);
+                element.removeEventListener(type, handler, capture);
             } else if (element.detachEvent) {
                 element.detachEvent("on"+type,handler);
             } else {
@@ -72,14 +72,14 @@ SimpleWindow.prototype = {
 
     // 创建窗口元素 并添加到页面
     _create : function(width, height) {
-        var windowEle = this.windowEle = document.createElement('div');
-        windowEle.className = "simple-window";
-        windowEle.style.width = width + "px";
-        windowEle.style.height = height + "px";
+        var winElement = this.winElement = document.createElement('div');
+        winElement.className = "simple-window";
+        winElement.style.width = width + "px";
+        winElement.style.height = height + "px";
 
         var winContainer = this.winContainer = document.createElement('div');
         winContainer.className = "simple-window-container";
-        windowEle.appendChild(winContainer);
+        winElement.appendChild(winContainer);
 
         var winHeader = this.winHeader = document.createElement('div');
         winHeader.className = "simple-window-header";
@@ -97,10 +97,10 @@ SimpleWindow.prototype = {
         this.moveTo(this.options.top || 0, this.options.left || 0);
 
         // 添加到页面
-        this.winParent.appendChild(windowEle);
+        this.winParent.appendChild(winElement);
 
         // 绑定拖动事件
-        this._drag(windowEle, winHeader);
+        this._drag(winElement, winHeader);
 
         // 绑定缩小放大事件
         this._bindResize();
@@ -109,7 +109,7 @@ SimpleWindow.prototype = {
 
     // 移动窗口位置
     moveTo : function(top, left) {
-        var winStyle = this.windowEle.style;
+        var winStyle = this.winElement.style;
         winStyle.left = left + "px";
         winStyle.top = top + "px";
     },
@@ -186,21 +186,62 @@ SimpleWindow.prototype = {
         }
 
         Util.event.on(handler, 'mousedown', mouseDown);
-
-
-        Util.event.on(ele, 'mousemove', function(e) {
-            console.info(e.offsetX, e.offsetY)
-        });
     },
 
     resizeTo : function(width, height) {
-        var winStyle = this.windowEle.style;
+        var winStyle = this.winElement.style;
         winStyle.width = width + "px";
         winStyle.height = height + "px";
     },
 
+
     _bindResize : function() {
-        // body...
+        var _self = this;
+        var winElement = this.winElement;
+        Util.event.on(winElement, 'mousemove', setCursor);
+
+        function setCursor(event) {
+
+            event = Util.event.getEvent(event);
+
+            var cursor = "default";
+
+            var offsetWdith = _self.winElement.offsetWidth,
+                offsetHeight = _self.winElement.offsetHeight
+
+            var winX = _self.winElement.clientX,
+                winY = _self.winElement.clientY
+
+
+            var x = event.clientX - winX + (offsetWdith - _self.winElement.clientWidth)/2, 
+                y = event.clientY - winY + (offsetHeight - _self.winElement.clientHeight)/2;
+
+            debugger;
+
+            if(x >= 0 && x <= 10){
+                cursor = "ew-resize";
+                if(y >= 0 && y <= 10){
+                    cursor = "nwse-resize";
+                }else if(y >= offsetHeight - 10){
+                    cursor = "nesw-resize";
+                }
+            }else if(x >= offsetWdith - 10){
+                cursor = "ew-resize";
+                if(y >= 0 && y <= 10){
+                    cursor = "nesw-resize";
+                }else if(y >= offsetHeight - 10){
+                    cursor = "nwse-resize";
+                }
+            }else if(y >= 0 && y <= 10){
+                cursor = "ns-resize";
+            }else if(y >= offsetHeight - 10){
+                cursor = "ns-resize";
+            }else{
+                cursor = "default";
+            }
+
+            winElement.style.cursor = cursor;
+        }
     }
 
 
