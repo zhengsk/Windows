@@ -102,6 +102,9 @@ SimpleWindow.prototype = {
         // 绑定拖动事件
         this._drag(windowEle, winHeader);
 
+        // 绑定缩小放大事件
+        this._bindResize();
+
     },
 
     // 移动窗口位置
@@ -188,13 +191,24 @@ SimpleWindow.prototype = {
         Util.event.on(ele, 'mousemove', function(e) {
             console.info(e.offsetX, e.offsetY)
         });
+    },
 
+    resizeTo : function(width, height) {
+        var winStyle = this.windowEle.style;
+        winStyle.width = width + "px";
+        winStyle.height = height + "px";
+    },
+
+    _bindResize : function() {
+        // body...
     }
+
+
 
 
 }
 
-new SimpleWindow({
+var win01 = new SimpleWindow({
     parent : Util.getId('wrapper'),
 
     width : 300,
@@ -208,7 +222,7 @@ new SimpleWindow({
 });
 
 
-new SimpleWindow({
+var win02 = new SimpleWindow({
     parent : Util.getId('wrapper'),
 
     width : 200,
