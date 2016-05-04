@@ -80,9 +80,9 @@ SimpleWindow.prototype = {
         winElement.className = "simple-window";
         winElement.style.width = width + "px";
         winElement.style.height = height + "px";
-        Util.event.on(winElement, 'click', function() {
+        Util.event.on(winElement, 'mousedown', function() {
             _self.moveToFront();
-        })
+        });
 
         var winContainer = this.winContainer = document.createElement('div');
         winContainer.className = "simple-window-container";
@@ -113,25 +113,38 @@ SimpleWindow.prototype = {
         this.winParent.appendChild(winElement);
 
         // 绑定拖动事件
-        this._drag(winElement, winHeader);
+        this._move(winElement, winHeader);
 
         // 绑定缩小放大事件
         this._bindResize();
 
         // 集中管理器
-        this._toInstanceCenter(this);
+        this._addInstance(this);
 
         // 移到最前
         this.moveToFront();
 
     },
 
-    _toInstanceCenter : function(instance) {
+
+    // 移动到实例集合
+    _addInstance : function(instance) {
         if(!this.constructor.instances){
             this.constructor.instances = [];
         };
         instance.winElement.style.zIndex = this.constructor.instances.length * 5 + 100;
         this.constructor.instances.push(instance);
+    },
+
+    // 从实例集合中移除实例
+    _removeInstance : function(instance) {
+        var instances = this.constructor.instances
+        for(var i = 0, j = instances.length; i < j; i ++){
+            if(instances[i] === instance){
+                instances.splice(i,1);
+                return false;
+            };
+        }
     },
 
     // 移动到最前 修改z-index
@@ -153,7 +166,7 @@ SimpleWindow.prototype = {
     },
 
     // 绑定拖动功能
-    _drag : function(ele, handler) {
+    _move : function(ele, handler) {
 
         var _self = this;
 
@@ -229,12 +242,12 @@ SimpleWindow.prototype = {
         Util.event.on(handler, 'mousedown', mouseDown);
     },
 
+    // 设置窗口大小
     resizeTo : function(width, height) {
         var winStyle = this.winElement.style;
         (width !== null) && (winStyle.width = width + "px");
         (height !== null) && (winStyle.height = height + "px");
     },
-
 
     _bindResize : function() {
         var _self = this;
@@ -425,10 +438,58 @@ SimpleWindow.prototype = {
                 Util.event.off(document, 'mouseup', resizeMouseUp);
             }
         }
+    },
+
+    // 收起 collapse
+    collapse : function(toggle) {
+        if(toggle === undefined){
+            this.isCollapse = !this.isCollapse;
+        }else{
+            this.isCollapse = toggle;
+        };
+
+        if(this.isCollapse){
+            this.beforeHeight = this.winElement.style.height;
+
+            this.winElement.style.height = 
+                (this.winElement.offsetHeight - this.winElement.clientHeight)
+                + this.winHeader.offsetHeight + "px";
+            this.winContent.style.display = "none";
+            this.winFooter.style.display = "none";
+        }else{
+            this.winContent.style.display = "block";
+            this.winFooter.style.display = "block";
+            this.winElement.style.height = this.beforeHeight;
+        }
+    },
+
+    // 最大化 maximize
+    maximize : function(toggle) {
+        if(toggle === undefined){
+            this.isMaximize = !this.isMaximize
+        }else{
+            this.isMaximize = toggle;
+        }
+
+        if(this.isMaximize){
+            var beforeStyle = this.winElement.style;
+            this.beforeLeft = parseInt(beforeStyle.left, 10);
+            this.beforeTop = parseInt(beforeStyle.top, 10);
+
+            this.beforeWidth = parseInt(beforeStyle.width, 10);
+            this.beforeHeight = parseInt(beforeStyle.height, 10);
+
+            this.resizeTo(this.winParent.clientWidth, this.winParent.clientHeight);
+            this.moveTo(0, 0);
+
+            this.isMaximize = true;
+        }else{
+            this.resizeTo(this.beforeWidth, this.beforeHeight);
+            this.moveTo(this.beforeLeft, this.beforeTop);
+
+            this.isMaximize = false;
+        }
     }
-
-
-
 
 }
 
