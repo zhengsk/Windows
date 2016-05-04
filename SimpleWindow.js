@@ -73,25 +73,37 @@ SimpleWindow.prototype = {
 
     // 创建窗口元素 并添加到页面
     _create : function(width, height) {
+        var _self = this;
+
+        // winElement
         var winElement = this.winElement = document.createElement('div');
         winElement.className = "simple-window";
         winElement.style.width = width + "px";
         winElement.style.height = height + "px";
+        Util.event.on(winElement, 'click', function() {
+            _self.moveToFront();
+        })
 
         var winContainer = this.winContainer = document.createElement('div');
         winContainer.className = "simple-window-container";
         winElement.appendChild(winContainer);
 
+        // winHeader
         var winHeader = this.winHeader = document.createElement('div');
         winHeader.className = "simple-window-header";
+        winHeader.innerHTML = this.options.title;
         winContainer.appendChild(winHeader);
 
+        // winContent
         var winContent = this.winContent = document.createElement('div');
         winContent.className = "simple-window-content";
+        winContent.innerHTML = this.options.content;
         winContainer.appendChild(winContent);
 
+        // winFooter
         var winFooter = this.winFooter = document.createElement('div');
         winFooter.className = "simple-window-footer";
+        winFooter.innerHTML = this.options.footer;
         winContainer.appendChild(winFooter);
 
         // 设置位置
@@ -106,6 +118,31 @@ SimpleWindow.prototype = {
         // 绑定缩小放大事件
         this._bindResize();
 
+        // 集中管理器
+        this._toInstanceCenter(this);
+
+        // 移到最前
+        this.moveToFront();
+
+    },
+
+    _toInstanceCenter : function(instance) {
+        if(!this.constructor.instances){
+            this.constructor.instances = [];
+        };
+        instance.winElement.style.zIndex = this.constructor.instances.length * 5 + 100;
+        this.constructor.instances.push(instance);
+    },
+
+    // 移动到最前 修改z-index
+    moveToFront : function() {
+        var instances = this.constructor.instances
+        for(var i = 0, j = instances.length; i < j; i ++){
+            instances[i].winElement.style.zIndex = i * 5 + 100;
+            instances[i].winElement.style.opacity = 0.6;
+        }
+        this.winElement.style.zIndex = i * 10 + 100;
+        this.winElement.style.opacity = 1;
     },
 
     // 移动窗口位置
@@ -341,10 +378,22 @@ SimpleWindow.prototype = {
 
             if(changeParam.left){
                 left = prePosition.left + changedAxis.x;
+                if(changedAxis.x >= preSize.width - _self.options.minWidth){
+                    left = prePosition.left + (preSize.width - _self.options.minWidth);
+                }
+                if(changedAxis.x <= preSize.width - _self.options.maxWidth){
+                    left = prePosition.left + (preSize.width - _self.options.maxWidth);
+                }
             }
 
             if(changeParam.top){
                 top = prePosition.top + changedAxis.y;
+                if(changedAxis.y >= preSize.height - _self.options.minHeight){
+                    top = prePosition.top + (preSize.height - _self.options.minHeight);
+                }
+                if(changedAxis.y <= preSize.height - _self.options.maxHeight){
+                    top = prePosition.top + (preSize.height - _self.options.maxHeight);
+                }
             }
 
             // 最大最小宽高限制
@@ -353,16 +402,17 @@ SimpleWindow.prototype = {
             height = height < _self.options.minHeight ? _self.options.minHeight : height;
             height = height > _self.options.maxHeight ? _self.options.maxHeight : height;
 
-            // 缩小放大范围限制
+            // 缩小放大 大小 父级 范围限制
             width = width + left > _self.winParent.clientWidth ? _self.winParent.clientWidth - left : width;
             height = height + top > _self.winParent.clientHeight ? _self.winParent.clientHeight - top : height;
 
-
+            // 缩小放大 位置 父级 范围限制
             left = left <= 0 ? 0 : left;
             top = top <= 0 ? 0 : top;
 
-            left == 0 && (width = null)
-            top == 0 && (height = null)
+            left == 0 && changeParam.left && (width = preSize.width + prePosition.left);
+            top == 0 && changeParam.top && (height = preSize.height + prePosition.top);
+
 
             _self.moveTo(left, top);
             _self.resizeTo(width, height);
@@ -390,6 +440,9 @@ var win01 = new SimpleWindow({
     top : 80,
     left : 100,
 
+    minWidth : 10,
+    minHeight : 10,
+
     title : "标题",
     content : "内容",
     footer : "状态栏"
@@ -413,7 +466,6 @@ var win02 = new SimpleWindow({
     content : "内容",
     footer : "状态栏"
 });
-
 
 
 

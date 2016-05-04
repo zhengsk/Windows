@@ -1,11 +1,19 @@
 .window-wrapper{
 	position: relative;
-	top:20px;
-	left: 20px;
+	top:50px;
+	left: 50px;
 	border:2px solid #FF00FF;
 	padding: 20px;
 	height: 500px;
 	width: 900px;
+
+		-webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select:none;
+    user-select: none;
+    -webkit-touch-callout:none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+
 }
 
 .simple-window{
@@ -34,6 +42,7 @@
 	line-height: 2em;
 	padding: 0 10px;
 	border-bottom: 1px solid #AAA;
+	cursor: move;
 }
 
 .simple-window-content{
