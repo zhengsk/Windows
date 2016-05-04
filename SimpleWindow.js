@@ -111,8 +111,8 @@ SimpleWindow.prototype = {
     // 移动窗口位置
     moveTo : function(left, top) {
         var winStyle = this.winElement.style;
-        winStyle.left = left + "px";
-        winStyle.top = top + "px";
+        (left !== null) && (winStyle.left = left + "px");
+        (top !== null) && (winStyle.top = top + "px");
     },
 
     // 绑定拖动功能
@@ -162,10 +162,10 @@ SimpleWindow.prototype = {
 
         // 拖动功能
         function mouseMove(event) {
-            var currentAxis = Util.event.getPageAxis(event);
+            var currentMouse = Util.event.getPageAxis(event);
             var changedAxis = {
-                x : currentAxis.x - preMouse.x,
-                y : currentAxis.y - preMouse.y
+                x : currentMouse.x - preMouse.x,
+                y : currentMouse.y - preMouse.y
             }
 
             var resultX = prePosition.left + changedAxis.x;
@@ -194,8 +194,8 @@ SimpleWindow.prototype = {
 
     resizeTo : function(width, height) {
         var winStyle = this.winElement.style;
-        winStyle.width = width + "px";
-        winStyle.height = height + "px";
+        (width !== null) && (winStyle.width = width + "px");
+        (height !== null) && (winStyle.height = height + "px");
     },
 
 
@@ -295,8 +295,8 @@ SimpleWindow.prototype = {
                 preMouse = Util.event.getPageAxis(event);
 
                 preSize = {
-                    width : parseInt(_self.winElement.style.width),
-                    height : parseInt(_self.winElement.style.height)
+                    width : parseInt(_self.winElement.offsetWidth),
+                    height : parseInt(_self.winElement.offsetHeight)
                 }
 
                 prePosition = {
@@ -311,10 +311,10 @@ SimpleWindow.prototype = {
 
         function resizeMouseMove(event) {
             event = Util.event.getEvent(event);
-            var currentAxis = Util.event.getPageAxis(event);
+            var currentMouse = Util.event.getPageAxis(event);
             var changedAxis = {
-                x : currentAxis.x - preMouse.x,
-                y : currentAxis.y - preMouse.y
+                x : currentMouse.x - preMouse.x,
+                y : currentMouse.y - preMouse.y
             }
 
             var left = prePosition.left, 
@@ -347,9 +347,24 @@ SimpleWindow.prototype = {
                 top = prePosition.top + changedAxis.y;
             }
 
+            // 最大最小宽高限制
+            width = width < _self.options.minWidth ? _self.options.minWidth : width;
+            width = width > _self.options.maxWidth ? _self.options.maxWidth : width;
+            height = height < _self.options.minHeight ? _self.options.minHeight : height;
+            height = height > _self.options.maxHeight ? _self.options.maxHeight : height;
+
+            // 缩小放大范围限制
+            width = width + left > _self.winParent.clientWidth ? _self.winParent.clientWidth - left : width;
+            height = height + top > _self.winParent.clientHeight ? _self.winParent.clientHeight - top : height;
+
+
+            left = left <= 0 ? 0 : left;
+            top = top <= 0 ? 0 : top;
+
+            left == 0 && (width = null)
+            top == 0 && (height = null)
 
             _self.moveTo(left, top);
-
             _self.resizeTo(width, height);
         }
 
@@ -388,6 +403,11 @@ var win02 = new SimpleWindow({
     height : 200,
     top : 250,
     left : 250,
+
+    minWidth : 100,
+    minHeight : 100,
+    maxWidth : 300,
+    maxHeight : 300,
 
     title : "标题",
     content : "内容",
