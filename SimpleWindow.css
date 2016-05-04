@@ -45,9 +45,14 @@
 	cursor: move;
 }
 
+.simple-window-container{
+	height: 100%;
+	padding: 3em 1em;
+	box-sizing: border-box;
+}
+
 .simple-window-content{
-	background-color: #EEE;
-	padding-top: 2em;
+	min-height: 100%;
 }
 
 .simple-window-footer{

@@ -66,10 +66,20 @@ function SimpleWindow(opts) {
     this.winParent = opts.parent || document.body;
 
     this._create(opts.width, opts.height);
+
+    this.init();
 }
 
 
 SimpleWindow.prototype = {
+
+    init : function() {
+        this.isMaximize = this.options.maximize || false;
+        this.isCollapse = this.options.collapse || false;
+
+        if(this.isMaximize){this.maximize();}
+        if(this.isCollapse){this.collapse();}
+    },
 
     // 创建窗口元素 并添加到页面
     _create : function(width, height) {
@@ -93,6 +103,9 @@ SimpleWindow.prototype = {
         winHeader.className = "simple-window-header";
         winHeader.innerHTML = this.options.title;
         winContainer.appendChild(winHeader);
+        Util.event.on(winElement, 'dblclick', function() {
+            _self.maximize();
+        });
 
         // winContent
         var winContent = this.winContent = document.createElement('div');
@@ -123,7 +136,6 @@ SimpleWindow.prototype = {
 
         // 移到最前
         this.moveToFront();
-
     },
 
 
@@ -284,7 +296,7 @@ SimpleWindow.prototype = {
         // 设置鼠标样式
         function setCursor(event) {
 
-            if(_self.resizing){return false};
+            if(_self.resizing || _self.isCollapse || _self.isMaximize){return false};
 
             _self.resizeAble = true;
 
@@ -477,17 +489,14 @@ SimpleWindow.prototype = {
             this.beforeTop = parseInt(beforeStyle.top, 10);
 
             this.beforeWidth = parseInt(beforeStyle.width, 10);
-            this.beforeHeight = parseInt(beforeStyle.height, 10);
-
+            this.beforeHeight = (this.isCollapse && parseInt(this.beforeHeight,10)) || parseInt(beforeStyle.height, 10);
             this.resizeTo(this.winParent.clientWidth, this.winParent.clientHeight);
             this.moveTo(0, 0);
-
-            this.isMaximize = true;
         }else{
             this.resizeTo(this.beforeWidth, this.beforeHeight);
             this.moveTo(this.beforeLeft, this.beforeTop);
 
-            this.isMaximize = false;
+            this.collapse(this.isCollapse);
         }
     }
 
