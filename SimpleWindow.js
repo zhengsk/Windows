@@ -498,6 +498,29 @@ SimpleWindow.prototype = {
 
             this.collapse(this.isCollapse);
         }
+    },
+
+    // 显示窗口
+    show : function() {
+        this.isShow = true;
+        this.winElement.style.display = "block";
+    },
+
+    // 隐藏窗口
+    hide : function() {
+        this.isShow = false;
+        this.winElement.style.display = "block";
+    },
+
+    // 切换显示和隐藏
+    toggle : function() {
+        this.isShow != this.isShow;
+        this[(this.isShow ? "show" : "hide")]();
+    },
+
+    // 销毁窗口
+    destory : function() {
+        
     }
 
 }
@@ -536,6 +559,26 @@ var win02 = new SimpleWindow({
     content : "内容",
     footer : "状态栏"
 });
+
+var win03 = new SimpleWindow({
+    parent : Util.getId('wrapper'),
+
+    width : 250,
+    height : 200,
+    top : 350,
+    left : 350,
+
+    minWidth : 100,
+    minHeight : 100,
+    maxWidth : 300,
+    maxHeight : 300,
+
+    title : "111",
+    content : "222",
+    footer : "3333"
+});
+
+
 
 
 
