@@ -520,7 +520,7 @@ SimpleWindow.prototype = {
 
     // 销毁窗口
     destory : function() {
-        
+        this.winElement.parentNode.removeChild(this.winElement)
     }
 
 }
