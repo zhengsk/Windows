@@ -1,3 +1,3 @@
 # SimpleWindow
-### A simple dragable and scalable window dialog !
+### A simple draggable and scaleable window dialog! 
 http://zhengsk.github.io/Windows/
